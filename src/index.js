@@ -4,6 +4,7 @@ console.log(fxrand()) // deterministic PRNG function, use it instead of Math.ran
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls} from "three/examples/jsm/controls/OrbitControls.js"
+import { Camera } from 'three';
 
 // note about the fxrand() function 
 // when the "fxhash" is always the same, it will generate the same sequence of
@@ -33,53 +34,65 @@ import { OrbitControls} from "three/examples/jsm/controls/OrbitControls.js"
 
 var scene = new THREE.Scene();
 
-var camera = new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000)
-camera.position.z = 12;
-camera.position.y = 2;
+const setupCamera = () => {
+  var camera = new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000)
+  camera.position.z = 12;
+  camera.position.y = 2;
+  
+  camera.lookAt(0,0,0);
+  return camera;
+}
 
-camera.lookAt(0,0,0);
+const camera = setupCamera();
+
+var setupRenderer = () => {
+  const renderer = new THREE.WebGLRenderer({antialias: true});
+
+  renderer.shadowMap.enabled = true;
+  renderer.setPixelRatio(window.devicePixelRatio); 
+  renderer.setClearColor("#e5e5e5");
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  var controls = new OrbitControls(camera, renderer.domElement);
+  document.body.appendChild(renderer.domElement);
+  return renderer;
+}
+
+const renderer = setupRenderer();
 
 
-const renderer = new THREE.WebGLRenderer({antialias: true});
-
-renderer.shadowMap.enabled = true;
-renderer.setPixelRatio(window.devicePixelRatio); 
-renderer.setClearColor("#e5e5e5");
-renderer.setSize(window.innerWidth,window.innerHeight);
-var controls = new OrbitControls(camera, renderer.domElement);
-document.body.appendChild(renderer.domElement);
-
-window.addEventListener('resize', () => {
-    renderer.setSize(window.innerWidth,window.innerHeight);
-    camera.aspect = window.innerWidth / window.innerHeight;
-
-    camera.updateProjectionMatrix();
-})
-
-
-var hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.61 );
-    hemiLight.position.set( 0, 50, 0 );
-// Add hemisphere light to scene   
-scene.add( hemiLight );
+// Lighting
+const setupLighting  = () => {
+  var hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.61 );
+  hemiLight.position.set( 0, 50, 0 );
+  // Add hemisphere light to scene   
+  scene.add( hemiLight );
 
 var dirLight = new THREE.DirectionalLight( 0xffffff, 0.54 );
-    dirLight.position.set( 0, 12, 8 );
-    dirLight.castShadow = true;
-    dirLight.shadow.mapSize = new THREE.Vector2(1024, 1024);
-// Add directional Light to scene    
-    scene.add( dirLight );
+  dirLight.position.set( 0, 12, 8 );
+  dirLight.castShadow = true;
+  dirLight.shadow.mapSize = new THREE.Vector2(1024, 1024);
+  // Add directional Light to scene    
+  scene.add( dirLight );
 
-var floorGeometry = new THREE.PlaneGeometry(5000, 5000, 1, 1);
-var floorMaterial = new THREE.MeshPhongMaterial({
-  color: 0xff0000,
-  shininess: 0
-});
+}
 
-var floor = new THREE.Mesh(floorGeometry, floorMaterial);
-floor.rotation.x = -0.5 * Math.PI;
-floor.receiveShadow = true;
-floor.position.y = 0;
-scene.add(floor);
+setupLighting();
+
+const setupFloor = () => {
+  var floorGeometry = new THREE.PlaneGeometry(5000, 5000, 1, 1);
+  var floorMaterial = new THREE.MeshPhongMaterial({
+    color: 0xff0000,
+    shininess: 0
+  });
+
+  var floor = new THREE.Mesh(floorGeometry, floorMaterial);
+  floor.rotation.x = -0.5 * Math.PI;
+  floor.receiveShadow = true;
+  floor.position.y = 0;
+  scene.add(floor);
+}
+
+setupFloor();
 
 
 var loadModels = function(){
@@ -111,12 +124,12 @@ var loadModels = function(){
     mesh.scale.set(2,2,2);
     scene.add(mesh);
   });
-  
 
-  
 }
 
 loadModels();
+
+
 function resizeRendererToDisplaySize(renderer) {
   const canvas = renderer.domElement;
   var width = window.innerWidth;
@@ -147,3 +160,15 @@ var render = function() {
 
 
 render();
+
+
+
+
+
+// Listeners
+window.addEventListener('resize', () => {
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  camera.aspect = window.innerWidth / window.innerHeight;
+
+  camera.updateProjectionMatrix();
+})
