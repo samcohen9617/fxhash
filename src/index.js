@@ -1,11 +1,9 @@
 // these are the variables you can use as inputs to your algorithms
 console.log(fxhash)   // the 64 chars hex number fed to your algorithm
 console.log(fxrand()) // deterministic PRNG function, use it instead of Math.random()
-
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-const loader = new GLTFLoader();
-const modelData =  loader.load("./assets/Parrot.glb");
+
 
 // note about the fxrand() function 
 // when the "fxhash" is always the same, it will generate the same sequence of
@@ -57,9 +55,6 @@ async function main() {
 
   // complete async tasks
   await world.init();
-
-  // start the animation loop
-  world.start();
 }
 
 main().catch((err) => {
@@ -70,7 +65,7 @@ main().catch((err) => {
 async function loadModels() {
   const loader = new GLTFLoader();
 
-  const modelData = await loader.loadAsync("../public/gltf/Parrot.glb");
+  const modelData = await loader.loadAsync("./Parrot.glb");
 
   console.log('Squaaawk!', modelData);
 }
