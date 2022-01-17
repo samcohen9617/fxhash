@@ -34,13 +34,16 @@ import { OrbitControls} from "three/examples/jsm/controls/OrbitControls.js"
 var scene = new THREE.Scene();
 
 var camera = new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000)
-camera.position.z = 80;
-camera.position.y = 10;
+camera.position.z = 3;
+camera.position.y = 2;
 
-camera.lookAt(0,0,0);
+camera.lookAt(0,2,0);
 
 
-var renderer = new THREE.WebGLRenderer({antialias: true});
+const renderer = new THREE.WebGLRenderer({antialias: true});
+
+renderer.shadowMap.enabled = true;
+renderer.setPixelRatio(window.devicePixelRatio); 
 renderer.setClearColor("#e5e5e5");
 renderer.setSize(window.innerWidth,window.innerHeight);
 var controls = new OrbitControls(camera, renderer.domElement);
@@ -54,26 +57,32 @@ window.addEventListener('resize', () => {
 })
 
 
-var light = new THREE.PointLight(0xFFFFFF, 1, 1000)
-light.position.set(0,50,-100);
+var light = new THREE.PointLight(0xFFFFFF, 5, 1000)
+light.position.set(0,8,3);
+scene.add(light);
+var light = new THREE.PointLight(0xFFFFFF, 5, 1000)
+light.position.set(0,8,-3);
 scene.add(light);
 
-var light = new THREE.PointLight(0xFFFFFF, 2, 1000)
-light.position.set(0,50,100);
-scene.add(light);
+var floorGeometry = new THREE.PlaneGeometry(5000, 5000, 1, 1);
+var floorMaterial = new THREE.MeshPhongMaterial({
+  color: 0xff0000,
+  shininess: 0
+});
 
-var light = new THREE.PointLight(0xFFFFFF, 2, 1000)
-light.position.set(0,-50,100);
-scene.add(light);
+var floor = new THREE.Mesh(floorGeometry, floorMaterial);
+floor.rotation.x = -0.5 * Math.PI;
+floor.receiveShadow = true;
+floor.position.y = -1;
+scene.add(floor);
+
 
 var loadModel = async function(){
   const loader = new GLTFLoader();
 
-  const modelData = await loader.loadAsync("./Parrot.glb");
+  const modelData = await loader.loadAsync("./Soldier.glb");
   const mesh = modelData.scene.children[0];
-
-
-  console.log('Squaaawk!', modelData);
+  mesh.rotation.z = Math.PI;
 
   scene.add(mesh);
 }
@@ -83,11 +92,32 @@ const loadAsync = async () =>{
 }
 loadAsync();
 
+function resizeRendererToDisplaySize(renderer) {
+  const canvas = renderer.domElement;
+  var width = window.innerWidth;
+  var height = window.innerHeight;
+  var canvasPixelWidth = canvas.width / window.devicePixelRatio;
+  var canvasPixelHeight = canvas.height / window.devicePixelRatio;
+
+  const needResize = canvasPixelWidth !== width || canvasPixelHeight !== height;
+  if (needResize) {
+    
+    renderer.setSize(width, height, false);
+  }
+  return needResize;
+}
+
 var render = function() {
     requestAnimationFrame(render);
 
     
     renderer.render(scene, camera);
+
+    if (resizeRendererToDisplaySize(renderer)) {
+      const canvas = renderer.domElement;
+      camera.aspect = canvas.clientWidth / canvas.clientHeight;
+      camera.updateProjectionMatrix();
+    }
 }
 
 
