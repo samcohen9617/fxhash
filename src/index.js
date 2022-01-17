@@ -34,10 +34,10 @@ import { OrbitControls} from "three/examples/jsm/controls/OrbitControls.js"
 var scene = new THREE.Scene();
 
 var camera = new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000)
-camera.position.z = 3;
+camera.position.z = 12;
 camera.position.y = 2;
 
-camera.lookAt(0,2,0);
+camera.lookAt(0,0,0);
 
 
 const renderer = new THREE.WebGLRenderer({antialias: true});
@@ -57,12 +57,17 @@ window.addEventListener('resize', () => {
 })
 
 
-var light = new THREE.PointLight(0xFFFFFF, 5, 1000)
-light.position.set(0,8,3);
-scene.add(light);
-var light = new THREE.PointLight(0xFFFFFF, 5, 1000)
-light.position.set(0,8,-3);
-scene.add(light);
+var hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.61 );
+    hemiLight.position.set( 0, 50, 0 );
+// Add hemisphere light to scene   
+scene.add( hemiLight );
+
+var dirLight = new THREE.DirectionalLight( 0xffffff, 0.54 );
+    dirLight.position.set( 0, 12, 8 );
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize = new THREE.Vector2(1024, 1024);
+// Add directional Light to scene    
+    scene.add( dirLight );
 
 var floorGeometry = new THREE.PlaneGeometry(5000, 5000, 1, 1);
 var floorMaterial = new THREE.MeshPhongMaterial({
@@ -73,25 +78,45 @@ var floorMaterial = new THREE.MeshPhongMaterial({
 var floor = new THREE.Mesh(floorGeometry, floorMaterial);
 floor.rotation.x = -0.5 * Math.PI;
 floor.receiveShadow = true;
-floor.position.y = -1;
+floor.position.y = 0;
 scene.add(floor);
 
 
-var loadModel = async function(){
+var loadModels = function(){
   const loader = new GLTFLoader();
 
-  const modelData = await loader.loadAsync("./Soldier.glb");
-  const mesh = modelData.scene.children[0];
-  mesh.rotation.z = Math.PI;
+  loader.load("./Parrot.glb", function(gltf){
+    const mesh = gltf.scene;
+    mesh.traverse((o) => {
+      if (o.isMesh) {
+        o.castShadow = true;
+        o.receiveShadow = true;
+      }
+    });
+    mesh.scale.set(0.1,0.1,0.1);
+    mesh.position.set(-4, 6,0) 
+    scene.add(mesh);
+  });
 
-  scene.add(mesh);
+  loader.load("./Soldier.glb", function(gltf){
+    const mesh = gltf.scene;
+    mesh.rotation.y = Math.PI;
+    mesh.traverse((o) => {
+      if (o.isMesh) {
+        o.castShadow = true;
+        o.receiveShadow = true;
+      }
+    });
+    
+    mesh.scale.set(2,2,2);
+    scene.add(mesh);
+  });
+  
+
+  
 }
 
-const loadAsync = async () =>{
-  await loadModel();
-}
-loadAsync();
-
+loadModels();
 function resizeRendererToDisplaySize(renderer) {
   const canvas = renderer.domElement;
   var width = window.innerWidth;
