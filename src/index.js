@@ -33,7 +33,8 @@ import { Camera } from 'three';
 // `
 
 var scene = new THREE.Scene();
-
+var  clock = new THREE.Clock();
+var mixer;
 const setupCamera = () => {
   var camera = new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000)
   camera.position.z = 12;
@@ -100,30 +101,23 @@ var loadModels = function(){
 
   loader.load("./Parrot.glb", function(gltf){
     const mesh = gltf.scene;
+    scene.add( mesh );
+    mesh.scale.set(0.1,0.1,0.1);
     mesh.traverse((o) => {
       if (o.isMesh) {
         o.castShadow = true;
         o.receiveShadow = true;
       }
     });
-    mesh.scale.set(0.1,0.1,0.1);
-    mesh.position.set(-4, 6,0) 
-    scene.add(mesh);
+    mixer = new THREE.AnimationMixer( mesh );
+    mesh.position.set(0, 5, 0);
+    gltf.animations.forEach( ( clip ) => {
+      mixer.clipAction( clip ).play();
+      
+    } );
   });
 
-  loader.load("./Soldier.glb", function(gltf){
-    const mesh = gltf.scene;
-    mesh.rotation.y = Math.PI;
-    mesh.traverse((o) => {
-      if (o.isMesh) {
-        o.castShadow = true;
-        o.receiveShadow = true;
-      }
-    });
-    
-    mesh.scale.set(2,2,2);
-    scene.add(mesh);
-  });
+  
 
 }
 
@@ -148,7 +142,11 @@ function resizeRendererToDisplaySize(renderer) {
 var render = function() {
     requestAnimationFrame(render);
 
-    
+    var delta = clock.getDelta();
+    if ( mixer ) {
+      mixer.update( delta );
+    }
+
     renderer.render(scene, camera);
 
     if (resizeRendererToDisplaySize(renderer)) {
