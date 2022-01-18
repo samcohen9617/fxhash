@@ -64,14 +64,14 @@ const renderer = setupRenderer();
 // Lighting
 const setupLighting  = () => {
   var hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.61 );
-  hemiLight.position.set( 0, 50, 0 );
+  hemiLight.position.set( 0, 100, 0 );
   // Add hemisphere light to scene   
   scene.add( hemiLight );
 
 var dirLight = new THREE.DirectionalLight( 0xffffff, 0.54 );
-  dirLight.position.set( 0, 12, 8 );
+  dirLight.position.set( 0, 15, 8 );
   dirLight.castShadow = true;
-  dirLight.shadow.mapSize = new THREE.Vector2(1024, 1024);
+  dirLight.shadow.mapSize = new THREE.Vector2(10240 * 2, 10240 *2);
   // Add directional Light to scene    
   scene.add( dirLight );
 
@@ -111,6 +111,24 @@ var loadModels = function(){
     });
     mixer = new THREE.AnimationMixer( mesh );
     mesh.position.set(0, 5, 0);
+    gltf.animations.forEach( ( clip ) => {
+      mixer.clipAction( clip ).play();
+      
+    } );
+  });
+
+  loader.load("./Soldier.glb", function(gltf){
+    const mesh = gltf.scene;
+    scene.add( mesh );
+    mesh.traverse((o) => {
+      if (o.isMesh) {
+        o.castShadow = true;
+        o.receiveShadow = true;
+      }
+    });
+    mixer = new THREE.AnimationMixer( mesh );
+    mesh.position.set(0, 0, 0);
+    mesh.rotation.y = Math.PI;
     gltf.animations.forEach( ( clip ) => {
       mixer.clipAction( clip ).play();
       
